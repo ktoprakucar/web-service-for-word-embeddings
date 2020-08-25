@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 from flask import Blueprint, current_app, request, jsonify
 
@@ -26,5 +28,5 @@ def train_classifier_model(model_id):
     csv_file = request.form['file']
     with open(csv_file, encoding="utf8") as file:
         text_df = pd.read_csv(file)
-    model_id = textClassifierService.train_model(text_df, model_id)
-    return jsonify(model_id=model_id)
+    model_info = textClassifierService.train_classifier_model(text_df, model_id)
+    return jsonify(json.dumps(model_info.__dict__))
