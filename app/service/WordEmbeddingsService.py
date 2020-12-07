@@ -8,6 +8,8 @@ from flask import current_app
 from gensim.models import Word2Vec
 from nltk.corpus import stopwords
 
+from app.vo.ModelInfoVo import ModelInfoVo
+
 nltk.download("punkt")
 nltk.download('stopwords')
 
@@ -26,7 +28,9 @@ class WordEmbeddingsService:
         current_app.logger.info("Word2Vec model training completed.")
         model_id = str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         self.save_model(model, model_id)
-        return model_id
+        model_info = ModelInfoVo()
+        model_info.set_model_id(model_id + ".model")
+        return model_info
 
     def create_word_embeddings(self, text_list, model_id):
         current_app.logger.info("Word Embeddings' generation is started.")

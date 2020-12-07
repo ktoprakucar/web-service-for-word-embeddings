@@ -12,7 +12,8 @@ from sklearn.metrics import *
 from sklearn.model_selection import train_test_split
 
 from app.service.WordEmbeddingsService import WordEmbeddingsService
-from app.vo.ModelInfoVo import ModelVo
+from app.vo.ModelInfoVo import ModelInfoVo
+from app.vo.PredictionVo import PredictionVo
 
 nltk.download("punkt")
 nltk.download('stopwords')
@@ -23,7 +24,7 @@ wordEmbeddingsService = WordEmbeddingsService()
 class TextClassifierService:
 
     def train_classifier_model(self, text_df, model_id):
-        current_app.logger.info("LGBM model training started.")
+        current_app.logger.info("LGB model training started.")
         tokenized_text = self.clean_and_tokenize_text(text_df)
         predicates = wordEmbeddingsService.create_word_embeddings(tokenized_text, model_id)
         x_test, x_train, y_test, y_train = self.create_model_data(predicates, text_df)
@@ -37,7 +38,7 @@ class TextClassifierService:
                                     is_unbalance=True,
                                     random_state=12345)
         classifier.fit(x_train, y_train)
-        current_app.logger.info("LGBM model training completed.")
+        current_app.logger.info("LGB model training completed.")
         predictions = classifier.predict(x_test)
         auc_score = roc_auc_score(y_test, predictions)
         f_score = f1_score(y_test, predictions, average='weighted')
@@ -57,18 +58,31 @@ class TextClassifierService:
 
     def create_model_info(self, auc_score, f_score):
         model_id = str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-        model_info = ModelVo()
+        model_info = ModelInfoVo()
         model_info.set_model_id(model_id)
         model_info.set_auc_score(auc_score)
         model_info.set_f_score(f_score)
         return model_info
 
     def save_model(self, classifier, model_id):
-        model_path = "app/models/classifier/" + model_id + ".model"
+        model_path = "app/models/classifier/" + model_id
         pickle.dump(classifier, open(model_path, "wb"))
+
+    def get_model(self, model_id):
+        model_path = "app/models/classifier/" + model_id
+        return pickle.load(open(model_path, 'rb'))
 
     def clean_and_tokenize_text(self, text_df):
         stop_words = stopwords.words('english')
         text_list = [[x.lower() for x in nltk.word_tokenize(x) if x not in stop_words and x.isalnum()]
                      for x in text_df['Text']]
         return text_list
+
+    def predict(self, vector_list, model_id):
+        model = self.get_model(model_id)
+        prediction = model.predict(vector_list)[0]
+        result = PredictionVo()
+        result.set_result(str(prediction))
+        return result
+
+

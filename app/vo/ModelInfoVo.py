@@ -1,4 +1,4 @@
-class ModelVo:
+class ModelInfoVo:
     def __init__(self):
         self.model_id = None
         self.auc_score = None
