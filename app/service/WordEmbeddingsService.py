@@ -13,6 +13,7 @@ from app.vo.ModelInfoVo import ModelInfoVo
 nltk.download("punkt")
 nltk.download('stopwords')
 
+VECTOR_SIZE = 150
 
 class WordEmbeddingsService:
 
@@ -60,7 +61,7 @@ class WordEmbeddingsService:
         for word in text_list:
             vectors.append(self.get_vector(word, model))
         if len(vectors) == 0:
-            return np.zeros(150)
+            return np.zeros(VECTOR_SIZE)
         vec_avg = np.mean(vectors, axis=0)
         return vec_avg
 
@@ -68,4 +69,4 @@ class WordEmbeddingsService:
         try:
             return model.wv.get_vector(word)
         except:
-            return np.zeros(150)
+            return np.zeros(VECTOR_SIZE)

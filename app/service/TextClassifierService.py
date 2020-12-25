@@ -24,7 +24,7 @@ wordEmbeddingsService = WordEmbeddingsService()
 class TextClassifierService:
 
     def train_classifier_model(self, text_df, model_id):
-        current_app.logger.info("LGB model training started.")
+        current_app.logger.info("LGBM training started.")
         tokenized_text = self.clean_and_tokenize_text(text_df)
         predicates = wordEmbeddingsService.create_word_embeddings(tokenized_text, model_id)
         x_test, x_train, y_test, y_train = self.create_model_data(predicates, text_df)
@@ -38,7 +38,7 @@ class TextClassifierService:
                                     is_unbalance=True,
                                     random_state=12345)
         classifier.fit(x_train, y_train)
-        current_app.logger.info("LGB model training completed.")
+        current_app.logger.info("LGBM training completed.")
         predictions = classifier.predict(x_test)
         auc_score = roc_auc_score(y_test, predictions)
         f_score = f1_score(y_test, predictions, average='weighted')
@@ -46,6 +46,13 @@ class TextClassifierService:
         self.save_model(classifier, model_id)
         current_app.logger.info('Models is saved: ' + model_info.model_id)
         return model_info
+
+    def predict(self, vector_list, model_id):
+        model = self.get_model(model_id)
+        prediction = model.predict(vector_list)[0]
+        result = PredictionVo()
+        result.set_result(str(prediction))
+        return result
 
     def create_model_data(self, predicates, text_df):
         target = np.where(text_df['Score'] > 3, 1, 0)
@@ -77,12 +84,5 @@ class TextClassifierService:
         text_list = [[x.lower() for x in nltk.word_tokenize(x) if x not in stop_words and x.isalnum()]
                      for x in text_df['Text']]
         return text_list
-
-    def predict(self, vector_list, model_id):
-        model = self.get_model(model_id)
-        prediction = model.predict(vector_list)[0]
-        result = PredictionVo()
-        result.set_result(str(prediction))
-        return result
 
 

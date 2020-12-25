@@ -37,9 +37,9 @@ def train_classifier_model():
 
 @controller.route('/predict-text', methods=['POST'])
 def predict_text_class():
+    current_app.logger.info("Text prediction started.")
     prediction_request = request.get_json()
     text = prediction_request['text']
     model_id = prediction_request['model_id']
-    current_app.logger.info("Text prediction started.")
     result = predictionService.predict_text_class(text, model_id)
     return jsonify(json.dumps(result.__dict__))
